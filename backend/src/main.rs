@@ -1,4 +1,10 @@
+#[macro_use]
+extern crate diesel;
+
+mod auth;
+mod db;
 mod investments;
+mod schema;
 
 use actix_web::{middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
 
