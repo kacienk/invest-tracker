@@ -1,24 +1,26 @@
 #[macro_use]
 extern crate diesel;
 
+mod args;
 mod auth;
 mod db;
 mod investments;
+mod ops;
 mod schema;
 
-use actix_web::{middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
+use args::{InvestTrackerManagerArgs, ManagerSubcommand};
+use clap::Parser;
 
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "debug");
-    std::env::set_var("RUST_BACKTRACE", "1");
-    env_logger::init();
+async fn main() {
+    let manager_command = InvestTrackerManagerArgs::parse();
 
-    HttpServer::new(move || {
-        let logger = Logger::default();
-        App::new().wrap(logger).service()
-    })
-    .bind(("127.0.0.1:8080", 8080))?
-    .run()
-    .await
+    match manager_command.subcommand {
+        ManagerSubcommand::InvestmentType(investment_type) => {
+            investments::ops::handle_investment_type_command(investment_type)
+        }
+        args::ManagerSubcommand::RunServer => {
+            ops::run_server().await.expect("Error running server");
+        }
+    }
 }
