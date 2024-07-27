@@ -2,6 +2,7 @@ use crate::schema::investment_users;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use uuid::Uuid;
 
 #[derive(Insertable)]
 #[table_name = "investment_users"]
@@ -15,7 +16,7 @@ pub struct NewInvestmentUser<'a> {
 
 #[derive(Queryable, AsChangeset, Debug)]
 pub struct InvestmentUser {
-    pub id: i32,
+    pub id: Uuid,
     pub username: String,
     pub email: String,
     pub password: String,
