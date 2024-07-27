@@ -13,7 +13,7 @@ diesel::table! {
 
 diesel::table! {
     investment_types (id) {
-        id -> Int4,
+        id -> Uuid,
         type_name -> Varchar,
     }
 }
@@ -25,6 +25,7 @@ diesel::table! {
         email -> Varchar,
         password -> Varchar,
         salt -> Varchar,
+        superuser -> Bool,
         created_at -> Timestamp,
     }
 }
@@ -43,7 +44,7 @@ diesel::table! {
         deleted -> Bool,
         group_id -> Uuid,
         creator_id -> Uuid,
-        investment_type_id -> Nullable<Int4>,
+        investment_type_id -> Nullable<Uuid>,
     }
 }
 

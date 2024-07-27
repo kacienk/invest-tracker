@@ -17,7 +17,7 @@ pub struct NewInvestment<'a> {
     pub investment_datetime: NaiveDateTime,
     pub group_id: Uuid,
     pub creator_id: Uuid,
-    pub investment_type_id: Option<i32>,
+    pub investment_type_id: Option<Uuid>,
 }
 
 #[derive(Selectable, Queryable, Serialize, Debug)]
@@ -32,7 +32,7 @@ pub struct Investment {
     pub investment_datetime: NaiveDateTime,
     pub group_id: Uuid,
     pub creator_id: Uuid,
-    pub investment_type_id: Option<i32>,
+    pub investment_type_id: Option<Uuid>,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
 }

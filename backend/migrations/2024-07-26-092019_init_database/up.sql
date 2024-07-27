@@ -6,6 +6,7 @@ CREATE TABLE investment_users (
     email VARCHAR(255) NOT NULL UNIQUE CHECK (email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$'),
     password VARCHAR(255) NOT NULL,
     salt VARCHAR(255) NOT NULL,
+    superuser BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -20,7 +21,7 @@ CREATE TABLE investment_groups (
 );
 
 CREATE TABLE investment_types (
-    id serial NOT NULL PRIMARY KEY,
+    id UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     type_name VARCHAR(255) NOT NULL UNIQUE
 );
 
@@ -37,7 +38,7 @@ CREATE TABLE investments (
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     group_id UUID NOT NULL,
     creator_id UUID NOT NULL,
-    investment_type_id serial,
+    investment_type_id UUID,
     FOREIGN KEY (group_id) REFERENCES investment_groups(id),
     FOREIGN KEY (creator_id) REFERENCES investment_users(id),
     FOREIGN KEY (investment_type_id) REFERENCES investment_types(id)

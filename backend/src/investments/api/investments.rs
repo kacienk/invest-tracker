@@ -9,7 +9,6 @@ use actix_web::{
     web::Path,
     HttpResponse,
 };
-use serde::{Deserialize, Serialize};
 use strum::Display;
 
 use crate::investments::models::investment::Investment;
