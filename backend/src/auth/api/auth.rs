@@ -1,3 +1,4 @@
+use actix::Addr;
 use actix_web::{
     body,
     error::ResponseError,
@@ -8,16 +9,13 @@ use actix_web::{
     HttpResponse,
 };
 use base64::{engine::general_purpose, Engine};
-use serde::{Deserialize, Serialize};
 use strum::Display;
 
-use crate::auth::{
-    auth_utils::{self, hash_password},
-    models::user::CreateUserBody,
-};
+use crate::auth::models::user::{InvestmentUser, NewInvestmentUser};
+use crate::auth::{auth_utils, models::user::CreateUserBody};
 use crate::{
-    auth::models::user::{InvestmentUser, NewInvestmentUser},
-    schema::investment_users::salt,
+    auth::api::messages::CreateInvestmentUser,
+    db::{AppState, DBActor},
 };
 
 #[derive(Debug, Display)]
@@ -65,7 +63,10 @@ impl ResponseError for AuthError {
 }
 
 #[post("/auth/user")]
-pub async fn create_user(body: Json<CreateUserBody>) -> Result<Json<InvestmentUser>, UserError> {
+pub async fn create_user(
+    state: Data<AppState>,
+    body: Json<CreateUserBody>,
+) -> Result<Json<InvestmentUser>, UserError> {
     let new_salt = auth_utils::generate_salt();
     let salt_str = general_purpose::STANDARD.encode(&new_salt);
     let hashed_password = auth_utils::hash_password(&body.password, &new_salt);
@@ -77,7 +78,10 @@ pub async fn create_user(body: Json<CreateUserBody>) -> Result<Json<InvestmentUs
         created_at: chrono::Local::now().naive_local(),
     };
 
-    let user = InvestmentUser::create_user(user).map_err(|_| UserError::UserCreateError)?;
-
-    Ok(Json(user))
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+    match db.send(CreateInvestmentUser { user }).await {
+        Ok(Ok(user)) => Ok(Json(user)),
+        Ok(Err(_)) => Err(UserError::UserCreateError),
+        Err(_) => Err(UserError::UserCreateError),
+    }
 }

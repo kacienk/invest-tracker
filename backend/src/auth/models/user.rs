@@ -22,7 +22,7 @@ pub struct NewInvestmentUser {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Queryable, AsChangeset, Serialize, Debug)]
+#[derive(Queryable, Selectable, AsChangeset, Serialize, Debug)]
 pub struct InvestmentUser {
     pub id: Uuid,
     pub username: String,
