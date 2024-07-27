@@ -1,4 +1,4 @@
-use crate::db::establish_connection;
+use crate::db::get_pool;
 use crate::investments::args::{
     CreateInvestmentType, DeleteInvestmentType, InvestmentTypeCommand, InvestmentTypeSubcommand,
     UpdateInvestmentType,
@@ -20,14 +20,19 @@ pub fn create_investment_type(investment_type: CreateInvestmentType) {
     println!("Creating investment type: {:?}", investment_type);
     use crate::schema::investment_types::dsl::*;
 
-    let connection = establish_connection();
+    dotenv::dotenv().ok();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let pool = get_pool(&db_url);
+    let mut conn = pool.get().expect("Failed to get a database connection");
+
     let new_investment_type = NewInvestmentType {
         name: &investment_type.name,
     };
 
     diesel::insert_into(investment_types)
         .values(&new_investment_type)
-        .execute(&connection)
+        .execute(&mut conn)
         .expect("Error saving new investment type");
 }
 
@@ -38,10 +43,15 @@ pub fn update_investment_type(investment_type: UpdateInvestmentType) {
     );
     use crate::schema::investment_types::dsl::*;
 
-    let connection = establish_connection();
+    dotenv::dotenv().ok();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let pool = get_pool(&db_url);
+    let mut conn = pool.get().expect("Failed to get a database connection");
+
     diesel::update(investment_types.find(investment_type.id))
         .set(type_name.eq(&investment_type.name))
-        .execute(&connection)
+        .execute(&mut conn)
         .expect("Error updating investment type");
 }
 
@@ -49,9 +59,14 @@ pub fn delete_investment_type(investment_type: DeleteInvestmentType) {
     println!("Deleting investment type with id {}", investment_type.id);
     use crate::schema::investment_types::dsl::*;
 
-    let connection = establish_connection();
+    dotenv::dotenv().ok();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let pool = get_pool(&db_url);
+    let mut conn = pool.get().expect("Failed to get a database connection");
+
     diesel::delete(investment_types.find(investment_type.id))
-        .execute(&connection)
+        .execute(&mut conn)
         .expect("Error deleting investment type");
 }
 
@@ -59,9 +74,14 @@ pub fn show_investment_types() {
     println!("Showing investment types");
     use crate::schema::investment_types::dsl::*;
 
-    let connection = establish_connection();
+    dotenv::dotenv().ok();
+    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+
+    let pool = get_pool(&db_url);
+    let mut conn = pool.get().expect("Failed to get a database connection");
+
     let results = investment_types
-        .load::<InvestmentType>(&connection)
+        .load::<InvestmentType>(&mut conn)
         .expect("Error loading investment types");
 
     for investment_type in results {

@@ -2,19 +2,27 @@ use crate::schema::investment_users;
 
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+#[derive(Deserialize)]
+pub struct CreateUserBody {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+}
 
 #[derive(Insertable)]
 #[table_name = "investment_users"]
-pub struct NewInvestmentUser<'a> {
-    pub username: &'a str,
-    pub email: &'a str,
-    pub password: &'a str,
-    pub salt: &'a str,
+pub struct NewInvestmentUser {
+    pub username: String,
+    pub email: String,
+    pub password: String,
+    pub salt: String,
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Queryable, AsChangeset, Serialize, Debug)]
 pub struct InvestmentUser {
     pub id: Uuid,
     pub username: String,

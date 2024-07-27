@@ -2,7 +2,8 @@ use crate::schema::investments;
 
 use bigdecimal::BigDecimal;
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
+use diesel::{pg::Pg, prelude::*};
+use serde::Serialize;
 use uuid::Uuid;
 
 #[derive(Insertable)]
@@ -19,7 +20,8 @@ pub struct NewInvestment<'a> {
     pub investment_type_id: Option<i32>,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Selectable, Queryable, Serialize, Debug)]
+#[diesel(check_for_backend(Pg))]
 pub struct Investment {
     pub id: Uuid,
     #[column_name = "investment_name"]

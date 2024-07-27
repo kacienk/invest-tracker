@@ -1,3 +1,4 @@
+use actix::Addr;
 use actix_web::{
     error::ResponseError,
     get,
@@ -10,6 +11,12 @@ use actix_web::{
 };
 use serde::{Deserialize, Serialize};
 use strum::Display;
+
+use crate::investments::models::investment::Investment;
+use crate::{
+    db::{AppState, DBActor},
+    investments::api::messages::GetInvestments,
+};
 
 #[derive(Debug, Display)]
 pub enum InvestmentsError {
@@ -37,6 +44,13 @@ impl ResponseError for InvestmentsError {
 }
 
 #[get("/investments")]
-pub async fn get_investments() -> Result<Json<String>, InvestmentsError> {
-    return Ok(Json("hello world!".to_string()));
+pub async fn get_investments(
+    state: Data<AppState>,
+) -> Result<Json<Vec<Investment>>, InvestmentsError> {
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+
+    match db.send(GetInvestments).await {
+        Ok(Ok(investments)) => Ok(Json(investments)),
+        _ => Err(InvestmentsError::InvestmentNotFound),
+    }
 }

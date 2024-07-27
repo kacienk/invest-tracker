@@ -43,7 +43,7 @@ diesel::table! {
         deleted -> Bool,
         group_id -> Uuid,
         creator_id -> Uuid,
-        investment_type_id -> Int4,
+        investment_type_id -> Nullable<Int4>,
     }
 }
 
