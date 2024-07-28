@@ -1,6 +1,6 @@
 use crate::schema::investment_users;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -19,7 +19,7 @@ pub struct NewInvestmentUser {
     pub email: String,
     pub password: String,
     pub salt: String,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Queryable, Selectable, AsChangeset, Serialize, Debug)]
@@ -29,5 +29,5 @@ pub struct InvestmentUser {
     pub email: String,
     pub password: String,
     pub salt: String,
-    pub created_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
 }

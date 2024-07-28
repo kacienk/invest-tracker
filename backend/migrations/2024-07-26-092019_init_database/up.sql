@@ -7,14 +7,14 @@ CREATE TABLE investment_users (
     password VARCHAR(255) NOT NULL,
     salt VARCHAR(255) NOT NULL,
     superuser BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE investment_groups (
     id UUID NOT NULL PRIMARY KEY DEFAULT uuid_generate_v4(),
     group_name VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     owner_id UUID NOT NULL,
     FOREIGN KEY (owner_id) REFERENCES investment_users(id)
@@ -31,9 +31,9 @@ CREATE TABLE investments (
     code VARCHAR(30),
     initial_value DECIMAL(15, 2) NOT NULL,
     current_value DECIMAL(15, 2) NOT NULL,
-    investment_datetime TIMESTAMP NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    investment_datetime TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     closed BOOLEAN NOT NULL DEFAULT FALSE,
     deleted BOOLEAN NOT NULL DEFAULT FALSE,
     group_id UUID NOT NULL,

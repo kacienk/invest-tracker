@@ -3,9 +3,10 @@
 diesel::table! {
     investment_groups (id) {
         id -> Uuid,
+        #[max_length = 255]
         group_name -> Varchar,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         deleted -> Bool,
         owner_id -> Uuid,
     }
@@ -14,6 +15,7 @@ diesel::table! {
 diesel::table! {
     investment_types (id) {
         id -> Uuid,
+        #[max_length = 255]
         type_name -> Varchar,
     }
 }
@@ -21,25 +23,31 @@ diesel::table! {
 diesel::table! {
     investment_users (id) {
         id -> Uuid,
+        #[max_length = 255]
         username -> Varchar,
+        #[max_length = 255]
         email -> Varchar,
+        #[max_length = 255]
         password -> Varchar,
+        #[max_length = 255]
         salt -> Varchar,
         superuser -> Bool,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 
 diesel::table! {
     investments (id) {
         id -> Uuid,
+        #[max_length = 255]
         investment_name -> Varchar,
+        #[max_length = 30]
         code -> Nullable<Varchar>,
         initial_value -> Numeric,
         current_value -> Numeric,
-        investment_datetime -> Timestamp,
-        created_at -> Timestamp,
-        updated_at -> Timestamp,
+        investment_datetime -> Timestamptz,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
         closed -> Bool,
         deleted -> Bool,
         group_id -> Uuid,

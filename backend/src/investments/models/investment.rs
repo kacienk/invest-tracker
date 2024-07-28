@@ -1,7 +1,7 @@
 use crate::schema::investments;
 
 use bigdecimal::BigDecimal;
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::{pg::Pg, prelude::*};
 use serde::Serialize;
 use uuid::Uuid;
@@ -14,7 +14,7 @@ pub struct NewInvestment<'a> {
     pub code: Option<&'a str>,
     pub initial_value: BigDecimal,
     pub current_value: BigDecimal,
-    pub investment_datetime: NaiveDateTime,
+    pub investment_datetime: DateTime<Utc>,
     pub group_id: Uuid,
     pub creator_id: Uuid,
     pub investment_type_id: Option<Uuid>,
@@ -29,10 +29,10 @@ pub struct Investment {
     pub code: Option<String>,
     pub initial_value: BigDecimal,
     pub current_value: BigDecimal,
-    pub investment_datetime: NaiveDateTime,
+    pub investment_datetime: DateTime<Utc>,
     pub group_id: Uuid,
     pub creator_id: Uuid,
     pub investment_type_id: Option<Uuid>,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }

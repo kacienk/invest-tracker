@@ -75,7 +75,7 @@ pub async fn create_user(
         email: body.email.clone(),
         password: hashed_password,
         salt: salt_str,
-        created_at: chrono::Local::now().naive_local(),
+        created_at: chrono::Utc::now(),
     };
 
     let db: Addr<DBActor> = state.as_ref().db.clone();

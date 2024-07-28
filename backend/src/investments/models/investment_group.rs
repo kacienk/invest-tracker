@@ -1,6 +1,6 @@
 use crate::schema::investment_groups;
 
-use chrono::NaiveDateTime;
+use chrono::{DateTime, Utc};
 use diesel::prelude::*;
 use uuid::Uuid;
 
@@ -17,8 +17,8 @@ pub struct InvestmentGroup {
     pub id: Uuid,
     #[column_name = "group_name"]
     pub name: String,
-    pub created_at: NaiveDateTime,
-    pub updated_at: NaiveDateTime,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     pub deleted: bool,
     pub owner_id: Uuid,
 }
