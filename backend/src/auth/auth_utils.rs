@@ -94,13 +94,18 @@ async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<Servi
     dotenv().ok();
     let data: &Data<AppState> = req.app_data::<Data<AppState>>().unwrap();
     let secret: &String = &data.secret;
+    let token = credentials.token();
 
     let config = req
         .app_data::<Config>()
         .map(|data| data.clone())
         .unwrap_or_else(Default::default);
 
-    match validate_token(secret, credentials.token()) {
+    if data.invalid_tokens.contains(token) {
+        return Err(AuthenticationError::from(config).into());
+    }
+
+    match validate_token(secret, token) {
         Ok(res) => {
             if res {
                 Ok(req)

@@ -1,9 +1,8 @@
+use std::sync::Arc;
+
 use actix::SyncArbiter;
-use actix_web::{middleware::Logger, web::Data, App, HttpResponse, HttpServer, Responder};
-use diesel::{
-    r2d2::{ConnectionManager, Pool},
-    PgConnection,
-};
+use actix_web::{middleware::Logger, web::Data, App, HttpServer};
+use dashmap::DashSet;
 use dotenv::dotenv;
 
 use crate::db::{get_pool, AppState, DBActor};
@@ -17,7 +16,8 @@ pub async fn run_server() -> std::io::Result<()> {
     let db_actor = SyncArbiter::start(3, move || DBActor(pool.clone()));
     let state = AppState {
         db: db_actor.clone(),
-        secret: secret.clone(),
+        secret: Arc::new(secret),
+        invalid_tokens: Arc::new(DashSet::new()),
     };
 
     HttpServer::new(move || {

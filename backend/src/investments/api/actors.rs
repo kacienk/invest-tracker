@@ -1,4 +1,4 @@
-use actix::{Addr, Handler};
+use actix::Handler;
 use diesel::prelude::*;
 
 use crate::db::DBActor;

@@ -1,12 +1,11 @@
 use actix::Addr;
 use actix_web::{
-    body,
     error::ResponseError,
     get,
-    http::{header::ContentType, StatusCode},
-    post, put,
-    web::{Data, Json, Path},
-    HttpResponse,
+    http::StatusCode,
+    post,
+    web::{Data, Json},
+    HttpRequest, HttpResponse,
 };
 use base64::{engine::general_purpose, Engine};
 use serde::{Deserialize, Serialize};
@@ -85,7 +84,7 @@ pub async fn login(
     body: Json<LoginBody>,
 ) -> Result<Json<LoginResponse>, AuthError> {
     let db: Addr<DBActor> = state.as_ref().db.clone();
-    let secret: String = state.as_ref().secret.clone();
+    let secret: &str = state.as_ref().secret.as_ref();
 
     let message = GetInvestmentUserByEmail {
         email: body.email.clone(),
@@ -97,10 +96,28 @@ pub async fn login(
     };
 
     if auth_utils::verify_password(&body.password, &user.salt, &user.password) {
-        let token = auth_utils::generate_token(&secret, &user.id.to_string());
+        let token = auth_utils::generate_token(secret, &user.id.to_string());
         Ok(Json(LoginResponse { token }))
     } else {
         Err(AuthError::AuthError)
+    }
+}
+
+#[get("/auth/logout")]
+pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpResponse, AuthError> {
+    let auth = match req.headers().get("Authorization") {
+        Some(a) => a,
+        None => return Err(AuthError::AuthError),
+    };
+    let auth_str = auth.to_str().unwrap();
+    if auth_str.starts_with("Bearer ") {
+        let token = &auth_str[7..];
+        state.invalid_tokens.insert(token.to_string());
+        Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(r#"{"message": "Logout successful"}"#))
+    } else {
+        Err(AuthError::BadAuthRequest)
     }
 }
 
