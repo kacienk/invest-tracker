@@ -1,14 +1,5 @@
 use actix::Addr;
-use actix_web::{
-    error::ResponseError,
-    get,
-    http::{header::ContentType, StatusCode},
-    post, put,
-    web::Data,
-    web::Json,
-    web::Path,
-    HttpResponse,
-};
+use actix_web::{error::ResponseError, get, http::StatusCode, web::Data, web::Json, HttpResponse};
 use strum::Display;
 
 use crate::investments::models::investment::Investment;

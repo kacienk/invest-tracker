@@ -1,13 +1,4 @@
-use std::env;
-
-use actix::Addr;
-use actix_web::dev::ServiceRequest;
-use actix_web::web::{Data, Json};
-use actix_web::Error;
-use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
-use actix_web_httpauth::extractors::AuthenticationError;
 use base64::{engine::general_purpose, Engine};
-use dotenv::dotenv;
 use jsonwebtoken::{
     decode, encode, errors::ErrorKind::ExpiredSignature, Algorithm, DecodingKey, EncodingKey,
     Header, Validation,
@@ -15,8 +6,6 @@ use jsonwebtoken::{
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-
-use crate::db::{AppState, DBActor};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -72,7 +61,7 @@ pub fn generate_token(secret: &str, username: &str) -> String {
     .unwrap()
 }
 
-fn validate_token(secret: &str, token: &str) -> Result<bool, jsonwebtoken::errors::Error> {
+pub fn validate_token(secret: &str, token: &str) -> Result<bool, jsonwebtoken::errors::Error> {
     let validation = Validation::new(Algorithm::HS256);
 
     match decode::<Claims>(
@@ -87,32 +76,5 @@ fn validate_token(secret: &str, token: &str) -> Result<bool, jsonwebtoken::error
             Ok(true)
         }
         Err(e) => Err(e),
-    }
-}
-
-async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, Error> {
-    dotenv().ok();
-    let data: &Data<AppState> = req.app_data::<Data<AppState>>().unwrap();
-    let secret: &String = &data.secret;
-    let token = credentials.token();
-
-    let config = req
-        .app_data::<Config>()
-        .map(|data| data.clone())
-        .unwrap_or_else(Default::default);
-
-    if data.invalid_tokens.contains(token) {
-        return Err(AuthenticationError::from(config).into());
-    }
-
-    match validate_token(secret, token) {
-        Ok(res) => {
-            if res {
-                Ok(req)
-            } else {
-                Err(AuthenticationError::from(config).into())
-            }
-        }
-        Err(_) => Err(AuthenticationError::from(config).into()),
     }
 }

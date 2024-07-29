@@ -78,7 +78,7 @@ struct LoginResponse {
     pub token: String,
 }
 
-#[post("/auth/login")]
+#[post("/login")]
 pub async fn login(
     state: Data<AppState>,
     body: Json<LoginBody>,
@@ -103,7 +103,7 @@ pub async fn login(
     }
 }
 
-#[get("/auth/logout")]
+#[get("/logout")]
 pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpResponse, AuthError> {
     let auth = match req.headers().get("Authorization") {
         Some(a) => a,
@@ -121,7 +121,7 @@ pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpRespo
     }
 }
 
-#[post("/auth/user")]
+#[post("/user")]
 pub async fn create_user(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
