@@ -1,71 +1,19 @@
 use actix::Addr;
 use actix_web::{
-    error::ResponseError,
-    get,
-    http::StatusCode,
-    post,
-    web::{Data, Json},
+    get, post,
+    web::{Data, Json, Path},
     HttpRequest, HttpResponse,
 };
 use base64::{engine::general_purpose, Engine};
 use serde::{Deserialize, Serialize};
-use strum::Display;
 
-use crate::auth::{
-    api::messages::GetInvestmentUserByEmail,
-    models::user::{InvestmentUser, NewInvestmentUser},
+use super::errors::{AuthError, UserError};
+use super::messages::{
+    CreateInvestmentUser, GetAllInvestmentUsers, GetInvestmentUser, GetInvestmentUserByEmail,
 };
-use crate::auth::{auth_utils, models::user::CreateUserBody};
-use crate::{
-    auth::api::messages::CreateInvestmentUser,
-    db::{AppState, DBActor},
-};
-
-#[derive(Debug, Display)]
-pub enum UserError {
-    UserNotFound,
-    UserUpdateError,
-    UserCreateError,
-    UserDeleteError,
-    BadUserRequest,
-}
-
-#[derive(Debug, Display)]
-pub enum AuthError {
-    AuthError,
-    UserNotFound,
-    BadAuthRequest,
-}
-
-impl ResponseError for UserError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match self {
-            UserError::UserNotFound => StatusCode::NOT_FOUND,
-            UserError::UserUpdateError => StatusCode::INTERNAL_SERVER_ERROR,
-            UserError::UserCreateError => StatusCode::INTERNAL_SERVER_ERROR,
-            UserError::UserDeleteError => StatusCode::INTERNAL_SERVER_ERROR,
-            UserError::BadUserRequest => StatusCode::BAD_REQUEST,
-        }
-    }
-}
-
-impl ResponseError for AuthError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match self {
-            AuthError::AuthError => StatusCode::UNAUTHORIZED,
-            AuthError::UserNotFound => StatusCode::NOT_FOUND,
-            AuthError::BadAuthRequest => StatusCode::BAD_REQUEST,
-        }
-    }
-}
+use crate::auth::auth_utils;
+use crate::auth::models::user::{CreateUserBody, InvestmentUser, NewInvestmentUser};
+use crate::db::{AppState, DBActor};
 
 #[derive(Deserialize)]
 struct LoginBody {
@@ -121,7 +69,7 @@ pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpRespo
     }
 }
 
-#[post("/user")]
+#[post("/users")]
 pub async fn create_user(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
@@ -142,5 +90,31 @@ pub async fn create_user(
         Ok(Ok(user)) => Ok(Json(user)),
         Ok(Err(_)) => Err(UserError::UserCreateError),
         Err(_) => Err(UserError::UserCreateError),
+    }
+}
+
+#[get("/users/{user_id}")]
+pub async fn get_user(
+    state: Data<AppState>,
+    user_id: Path<String>,
+) -> Result<Json<InvestmentUser>, UserError> {
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+    let message = GetInvestmentUser {
+        user_id: user_id.to_string(),
+    };
+    match db.send(message).await {
+        Ok(Ok(user)) => Ok(Json(user)),
+        Ok(Err(_)) => Err(UserError::UserNotFound),
+        Err(_) => Err(UserError::BadUserRequest),
+    }
+}
+
+#[get("/users")]
+pub async fn get_users(state: Data<AppState>) -> Result<Json<Vec<InvestmentUser>>, UserError> {
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+    match db.send(GetAllInvestmentUsers).await {
+        Ok(Ok(users)) => Ok(Json(users)),
+        Ok(Err(_)) => Err(UserError::BadUserRequest),
+        Err(_) => Err(UserError::BadUserRequest),
     }
 }

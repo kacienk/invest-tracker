@@ -9,6 +9,10 @@ pub struct CreateInvestmentUser {
 }
 
 #[derive(Message)]
+#[rtype(result = "QueryResult<Vec<InvestmentUser>>")]
+pub struct GetAllInvestmentUsers;
+
+#[derive(Message)]
 #[rtype(result = "QueryResult<InvestmentUser>")]
 pub struct GetInvestmentUser {
     pub user_id: String,
@@ -18,4 +22,17 @@ pub struct GetInvestmentUser {
 #[rtype(result = "QueryResult<InvestmentUser>")]
 pub struct GetInvestmentUserByEmail {
     pub email: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct UpdateInvestmentUser {
+    pub user_id: String,
+    pub username: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<()>")]
+pub struct DeleteInvestmentUser {
+    pub user_id: String,
 }
