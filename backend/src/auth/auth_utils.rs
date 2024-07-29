@@ -1,11 +1,11 @@
 use std::env;
 
+use actix::Addr;
 use actix_web::dev::ServiceRequest;
+use actix_web::web::{Data, Json};
 use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
-use actix_web_httpauth::headers::www_authenticate::bearer::Bearer;
-use actix_web_httpauth::middleware::HttpAuthentication;
 use base64::{engine::general_purpose, Engine};
 use dotenv::dotenv;
 use jsonwebtoken::{
@@ -15,6 +15,8 @@ use jsonwebtoken::{
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+
+use crate::db::{AppState, DBActor};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -38,7 +40,7 @@ pub fn hash_password(password: &str, salt: &[u8]) -> String {
     general_purpose::STANDARD.encode(hash)
 }
 
-fn verify_password(
+pub fn verify_password(
     provided_password: &str,
     stored_salt_base64: &str,
     stored_hash_base64: &str,
@@ -51,7 +53,7 @@ fn verify_password(
     hash_to_verify == stored_hash_base64
 }
 
-fn create_token(secret: &str, username: &str) -> String {
+pub fn generate_token(secret: &str, username: &str) -> String {
     let expiration = chrono::Utc::now()
         .checked_add_signed(chrono::Duration::minutes(15))
         .expect("valid timestamp")
@@ -88,32 +90,17 @@ fn validate_token(secret: &str, token: &str) -> Result<bool, jsonwebtoken::error
     }
 }
 
-// async fn check_token(req: HttpRequest) -> Result<HttpRequest, HttpResponse> {
-//     let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-
-//     if let Some(auth_header) = req.headers().get("Authorization") {
-//         if let Ok(auth_str) = auth_header.to_str() {
-//             if auth_str.starts_with("Bearer ") {
-//                 let token = &auth_str[7..];
-//                 if validate_jwt(&secret, token) {
-//                     return Ok(req);
-//                 }
-//             }
-//         }
-//     }
-//     Err(HttpResponse::Unauthorized().finish())
-// }
-
 async fn validator(req: ServiceRequest, credentials: BearerAuth) -> Result<ServiceRequest, Error> {
     dotenv().ok();
-    let secret = env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+    let data: &Data<AppState> = req.app_data::<Data<AppState>>().unwrap();
+    let secret: &String = &data.secret;
 
     let config = req
         .app_data::<Config>()
         .map(|data| data.clone())
         .unwrap_or_else(Default::default);
 
-    match validate_token(&secret, credentials.token()) {
+    match validate_token(secret, credentials.token()) {
         Ok(res) => {
             if res {
                 Ok(req)

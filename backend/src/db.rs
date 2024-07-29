@@ -6,8 +6,10 @@ use diesel::{
 
 pub struct DBActor(pub Pool<ConnectionManager<PgConnection>>);
 
+#[derive(Clone)]
 pub struct AppState {
     pub db: Addr<DBActor>,
+    pub secret: String,
 }
 
 impl Actor for DBActor {

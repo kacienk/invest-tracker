@@ -9,9 +9,13 @@ use actix_web::{
     HttpResponse,
 };
 use base64::{engine::general_purpose, Engine};
+use serde::{Deserialize, Serialize};
 use strum::Display;
 
-use crate::auth::models::user::{InvestmentUser, NewInvestmentUser};
+use crate::auth::{
+    api::messages::GetInvestmentUserByEmail,
+    models::user::{InvestmentUser, NewInvestmentUser},
+};
 use crate::auth::{auth_utils, models::user::CreateUserBody};
 use crate::{
     auth::api::messages::CreateInvestmentUser,
@@ -30,6 +34,7 @@ pub enum UserError {
 #[derive(Debug, Display)]
 pub enum AuthError {
     AuthError,
+    UserNotFound,
     BadAuthRequest,
 }
 
@@ -57,8 +62,45 @@ impl ResponseError for AuthError {
     fn status_code(&self) -> StatusCode {
         match self {
             AuthError::AuthError => StatusCode::UNAUTHORIZED,
+            AuthError::UserNotFound => StatusCode::NOT_FOUND,
             AuthError::BadAuthRequest => StatusCode::BAD_REQUEST,
         }
+    }
+}
+
+#[derive(Deserialize)]
+struct LoginBody {
+    pub email: String,
+    pub password: String,
+}
+
+#[derive(Serialize)]
+struct LoginResponse {
+    pub token: String,
+}
+
+#[post("/auth/login")]
+pub async fn login(
+    state: Data<AppState>,
+    body: Json<LoginBody>,
+) -> Result<Json<LoginResponse>, AuthError> {
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+    let secret: String = state.as_ref().secret.clone();
+
+    let message = GetInvestmentUserByEmail {
+        email: body.email.clone(),
+    };
+    let user = match db.send(message).await {
+        Ok(Ok(user)) => user,
+        Ok(Err(_)) => return Err(AuthError::UserNotFound),
+        Err(_) => return Err(AuthError::BadAuthRequest),
+    };
+
+    if auth_utils::verify_password(&body.password, &user.salt, &user.password) {
+        let token = auth_utils::generate_token(&secret, &user.id.to_string());
+        Ok(Json(LoginResponse { token }))
+    } else {
+        Err(AuthError::AuthError)
     }
 }
 

@@ -8,3 +8,15 @@ use serde::{Deserialize, Serialize};
 pub struct CreateInvestmentUser {
     pub user: NewInvestmentUser,
 }
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct GetInvestmentUser {
+    pub user_id: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct GetInvestmentUserByEmail {
+    pub email: String,
+}
