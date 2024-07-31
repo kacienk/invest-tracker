@@ -17,6 +17,8 @@ pub struct InvestTrackerManagerArgs {
 pub enum ManagerSubcommand {
     #[clap(name = "investment-type", about = "Manage investment types")]
     InvestmentType(InvestmentTypeCommand),
+    #[clap(name = "user", about = "Manage users")]
     User(UserCommand),
+    #[clap(name = "run-server", about = "Run server")]
     RunServer,
 }

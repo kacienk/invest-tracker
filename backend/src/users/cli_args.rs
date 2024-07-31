@@ -19,8 +19,11 @@ pub enum UserSubcommand {
 pub struct CreateUser {
     #[clap(short, long)]
     pub username: String,
+    #[clap(short, long)]
     pub email: String,
+    #[clap(short, long)]
     pub password: String,
+    #[clap(short, long)]
     pub superuser: bool,
 }
 
