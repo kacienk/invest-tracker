@@ -6,10 +6,11 @@ use actix_web_httpauth::middleware::HttpAuthentication;
 use dashmap::DashSet;
 use dotenv::dotenv;
 
-use crate::auth::api::routes::{auth_open_routes, user_routes};
 use crate::auth::middleware::auth_validator;
+use crate::auth::routes::auth_routes;
 use crate::db::{get_pool, AppState, DBActor};
-use crate::investments::api::investments;
+use crate::investments::routes::investments_routes;
+use crate::users::routes::user_routes;
 
 pub async fn run_server() -> std::io::Result<()> {
     dotenv().ok();
@@ -35,8 +36,13 @@ pub async fn run_server() -> std::io::Result<()> {
             .app_data(web::Data::new(state.clone()))
             .service(
                 web::scope("/api/v1")
-                    .service(web::scope("/auth").configure(auth_open_routes))
-                    .service(web::scope("").wrap(auth).configure(user_routes)),
+                    .service(web::scope("/auth").configure(auth_routes))
+                    .service(
+                        web::scope("")
+                            .wrap(auth)
+                            .configure(user_routes)
+                            .configure(investments_routes),
+                    ),
             )
     })
     .bind(("127.0.0.1", 8080))?

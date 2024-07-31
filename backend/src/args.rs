@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::investments::args::InvestmentTypeCommand;
+use crate::investment_types::cli_args::InvestmentTypeCommand;
 
 #[derive(Parser, Debug)]
 #[clap(

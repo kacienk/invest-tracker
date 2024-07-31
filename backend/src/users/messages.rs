@@ -1,14 +1,47 @@
 use actix::Handler;
+use actix::Message;
 use diesel::prelude::*;
+use diesel::QueryResult;
 use uuid::Uuid;
 
-use super::messages::{
-    CreateInvestmentUser, DeleteInvestmentUser, GetAllInvestmentUsers, GetInvestmentUser,
-    GetInvestmentUserByEmail, UpdateInvestmentUser,
-};
-use crate::auth::models::user::InvestmentUser;
 use crate::db::DBActor;
 use crate::schema::investment_users::dsl::*;
+use crate::users::models::{InvestmentUser, NewInvestmentUser};
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct CreateInvestmentUser {
+    pub user: NewInvestmentUser,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<Vec<InvestmentUser>>")]
+pub struct GetAllInvestmentUsers;
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct GetInvestmentUser {
+    pub user_id: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct GetInvestmentUserByEmail {
+    pub email: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<InvestmentUser>")]
+pub struct UpdateInvestmentUser {
+    pub user_id: String,
+    pub username: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<()>")]
+pub struct DeleteInvestmentUser {
+    pub user_id: String,
+}
 
 impl Handler<CreateInvestmentUser> for DBActor {
     type Result = QueryResult<InvestmentUser>;

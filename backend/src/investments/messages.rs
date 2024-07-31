@@ -1,10 +1,16 @@
+use super::models::Investment;
+use actix::Message;
+use diesel::QueryResult;
+
 use actix::Handler;
 use diesel::prelude::*;
 
 use crate::db::DBActor;
-use crate::investments::api::messages::GetInvestments;
-use crate::investments::models::investment::Investment;
 use crate::schema::investments::dsl::*;
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<Vec<Investment>>")]
+pub struct GetInvestments;
 
 impl Handler<GetInvestments> for DBActor {
     type Result = QueryResult<Vec<Investment>>;

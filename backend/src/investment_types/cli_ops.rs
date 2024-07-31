@@ -1,9 +1,9 @@
-use crate::db::get_pool;
-use crate::investments::args::{
+use super::cli_args::{
     CreateInvestmentType, DeleteInvestmentType, InvestmentTypeCommand, InvestmentTypeSubcommand,
     UpdateInvestmentType,
 };
-use crate::investments::models::investment_type::{InvestmentType, NewInvestmentType};
+use super::models::{InvestmentType, NewInvestmentType};
+use crate::db::get_pool;
 use diesel::prelude::*;
 
 pub fn handle_investment_type_command(investment_type: InvestmentTypeCommand) {

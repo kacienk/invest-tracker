@@ -1,36 +1,27 @@
 use actix::Addr;
 use actix_web::{
-    get, patch, post, put,
-    web::{Data, Json, Path},
+    get, post,
+    web::{Data, Json},
     HttpRequest, HttpResponse,
 };
 use base64::{engine::general_purpose, Engine};
-use serde::{Deserialize, Serialize};
 
-use super::errors::{AuthError, UserError};
-use super::messages::{
-    CreateInvestmentUser, GetAllInvestmentUsers, GetInvestmentUser, GetInvestmentUserByEmail,
+use super::errors::AuthError;
+use super::models::{LoginBody, TokenResponse};
+use crate::users::{
+    errors::UserError,
+    messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
+    models::{CreateUserBody, InvestmentUserResponse, NewInvestmentUser},
 };
-use crate::auth::models::user::{CreateUserBody, InvestmentUser, NewInvestmentUser};
-use crate::auth::{auth_utils, models::user::InvestmentUserResponse};
+
+use crate::auth::auth_utils;
 use crate::db::{AppState, DBActor};
-
-#[derive(Deserialize)]
-struct LoginBody {
-    pub email: String,
-    pub password: String,
-}
-
-#[derive(Serialize)]
-struct LoginResponse {
-    pub token: String,
-}
 
 #[post("/login")]
 pub async fn login(
     state: Data<AppState>,
     body: Json<LoginBody>,
-) -> Result<Json<LoginResponse>, AuthError> {
+) -> Result<Json<TokenResponse>, AuthError> {
     let db: Addr<DBActor> = state.as_ref().db.clone();
     let secret: &str = state.as_ref().secret.as_ref();
 
@@ -45,7 +36,7 @@ pub async fn login(
 
     if auth_utils::verify_password(&body.password, &user.salt, &user.password) {
         let token = auth_utils::generate_token(secret, &user.id.to_string());
-        Ok(Json(LoginResponse { token }))
+        Ok(Json(TokenResponse { token }))
     } else {
         Err(AuthError::AuthError)
     }
@@ -68,7 +59,7 @@ pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpRespo
 }
 
 #[post("/register")]
-pub async fn create_user(
+pub async fn register(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
 ) -> Result<Json<InvestmentUserResponse>, UserError> {
@@ -88,39 +79,5 @@ pub async fn create_user(
         Ok(Ok(user)) => Ok(Json(InvestmentUserResponse::from(user))),
         Ok(Err(_)) => Err(UserError::UserCreateError),
         Err(_) => Err(UserError::UserCreateError),
-    }
-}
-
-#[get("/users/{user_id}")]
-pub async fn get_user(
-    state: Data<AppState>,
-    user_id: Path<String>,
-) -> Result<Json<InvestmentUser>, UserError> {
-    let db: Addr<DBActor> = state.as_ref().db.clone();
-    let message = GetInvestmentUser {
-        user_id: user_id.to_string(),
-    };
-    match db.send(message).await {
-        Ok(Ok(user)) => Ok(Json(user)),
-        Ok(Err(_)) => Err(UserError::UserNotFound),
-        Err(_) => Err(UserError::BadUserRequest),
-    }
-}
-
-#[get("/users")]
-pub async fn get_users(
-    state: Data<AppState>,
-) -> Result<Json<Vec<InvestmentUserResponse>>, UserError> {
-    let db: Addr<DBActor> = state.as_ref().db.clone();
-    match db.send(GetAllInvestmentUsers).await {
-        Ok(Ok(users)) => {
-            let response_users: Vec<InvestmentUserResponse> = users
-                .into_iter()
-                .map(InvestmentUserResponse::from)
-                .collect();
-            Ok(Json(response_users))
-        }
-        Ok(Err(_)) => Err(UserError::BadUserRequest),
-        Err(_) => Err(UserError::BadUserRequest),
     }
 }

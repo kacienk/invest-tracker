@@ -10,13 +10,6 @@ pub enum UserError {
     BadUserRequest,
 }
 
-#[derive(Debug, Display)]
-pub enum AuthError {
-    AuthError,
-    UserNotFound,
-    BadAuthRequest,
-}
-
 impl ResponseError for UserError {
     fn error_response(&self) -> HttpResponse {
         HttpResponse::build(self.status_code()).json(self.to_string())
@@ -29,20 +22,6 @@ impl ResponseError for UserError {
             UserError::UserCreateError => StatusCode::INTERNAL_SERVER_ERROR,
             UserError::UserDeleteError => StatusCode::INTERNAL_SERVER_ERROR,
             UserError::BadUserRequest => StatusCode::BAD_REQUEST,
-        }
-    }
-}
-
-impl ResponseError for AuthError {
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code()).json(self.to_string())
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match self {
-            AuthError::AuthError => StatusCode::UNAUTHORIZED,
-            AuthError::UserNotFound => StatusCode::NOT_FOUND,
-            AuthError::BadAuthRequest => StatusCode::BAD_REQUEST,
         }
     }
 }

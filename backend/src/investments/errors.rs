@@ -1,12 +1,5 @@
-use actix::Addr;
-use actix_web::{error::ResponseError, get, http::StatusCode, web::Data, web::Json, HttpResponse};
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use strum::Display;
-
-use crate::investments::models::investment::Investment;
-use crate::{
-    db::{AppState, DBActor},
-    investments::api::messages::GetInvestments,
-};
 
 #[derive(Debug, Display)]
 pub enum InvestmentsError {
@@ -30,17 +23,5 @@ impl ResponseError for InvestmentsError {
             InvestmentsError::InvestmentDeleteError => StatusCode::INTERNAL_SERVER_ERROR,
             InvestmentsError::BadInvestmentRequest => StatusCode::BAD_REQUEST,
         }
-    }
-}
-
-#[get("/investments")]
-pub async fn get_investments(
-    state: Data<AppState>,
-) -> Result<Json<Vec<Investment>>, InvestmentsError> {
-    let db: Addr<DBActor> = state.as_ref().db.clone();
-
-    match db.send(GetInvestments).await {
-        Ok(Ok(investments)) => Ok(Json(investments)),
-        _ => Err(InvestmentsError::InvestmentNotFound),
     }
 }
