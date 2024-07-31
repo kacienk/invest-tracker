@@ -4,7 +4,6 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest, HttpResponse,
 };
-use base64::{engine::general_purpose, Engine};
 
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};

@@ -1,8 +1,7 @@
 use base64::{engine::general_purpose, Engine};
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
-use uuid::Uuid;
 
-use crate::{schema::investment_users::password, users::models::NewInvestmentUser};
+use crate::users::models::NewInvestmentUser;
 
 use super::{models::Claims, utils};
 
