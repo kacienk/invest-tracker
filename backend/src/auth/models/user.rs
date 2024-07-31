@@ -31,3 +31,22 @@ pub struct InvestmentUser {
     pub salt: String,
     pub created_at: DateTime<Utc>,
 }
+
+#[derive(Serialize)]
+pub struct InvestmentUserResponse {
+    pub id: Uuid,
+    pub username: String,
+    pub email: String,
+    pub created_at: DateTime<Utc>,
+}
+
+impl From<InvestmentUser> for InvestmentUserResponse {
+    fn from(value: InvestmentUser) -> Self {
+        InvestmentUserResponse {
+            id: value.id,
+            username: value.username,
+            email: value.email,
+            created_at: value.created_at,
+        }
+    }
+}

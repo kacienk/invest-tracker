@@ -1,6 +1,6 @@
 use actix::Addr;
 use actix_web::{
-    get, post,
+    get, patch, post, put,
     web::{Data, Json, Path},
     HttpRequest, HttpResponse,
 };
@@ -11,8 +11,8 @@ use super::errors::{AuthError, UserError};
 use super::messages::{
     CreateInvestmentUser, GetAllInvestmentUsers, GetInvestmentUser, GetInvestmentUserByEmail,
 };
-use crate::auth::auth_utils;
 use crate::auth::models::user::{CreateUserBody, InvestmentUser, NewInvestmentUser};
+use crate::auth::{auth_utils, models::user::InvestmentUserResponse};
 use crate::db::{AppState, DBActor};
 
 #[derive(Deserialize)]
@@ -61,19 +61,17 @@ pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpRespo
     if auth_str.starts_with("Bearer ") {
         let token = &auth_str[7..];
         state.invalid_tokens.insert(token.to_string());
-        Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(r#"{"message": "Logout successful"}"#))
+        Ok(HttpResponse::Ok().finish())
     } else {
         Err(AuthError::BadAuthRequest)
     }
 }
 
-#[post("/users")]
+#[post("/register")]
 pub async fn create_user(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
-) -> Result<Json<InvestmentUser>, UserError> {
+) -> Result<Json<InvestmentUserResponse>, UserError> {
     let new_salt = auth_utils::generate_salt();
     let salt_str = general_purpose::STANDARD.encode(&new_salt);
     let hashed_password = auth_utils::hash_password(&body.password, &new_salt);
@@ -87,7 +85,7 @@ pub async fn create_user(
 
     let db: Addr<DBActor> = state.as_ref().db.clone();
     match db.send(CreateInvestmentUser { user }).await {
-        Ok(Ok(user)) => Ok(Json(user)),
+        Ok(Ok(user)) => Ok(Json(InvestmentUserResponse::from(user))),
         Ok(Err(_)) => Err(UserError::UserCreateError),
         Err(_) => Err(UserError::UserCreateError),
     }
@@ -110,10 +108,18 @@ pub async fn get_user(
 }
 
 #[get("/users")]
-pub async fn get_users(state: Data<AppState>) -> Result<Json<Vec<InvestmentUser>>, UserError> {
+pub async fn get_users(
+    state: Data<AppState>,
+) -> Result<Json<Vec<InvestmentUserResponse>>, UserError> {
     let db: Addr<DBActor> = state.as_ref().db.clone();
     match db.send(GetAllInvestmentUsers).await {
-        Ok(Ok(users)) => Ok(Json(users)),
+        Ok(Ok(users)) => {
+            let response_users: Vec<InvestmentUserResponse> = users
+                .into_iter()
+                .map(InvestmentUserResponse::from)
+                .collect();
+            Ok(Json(response_users))
+        }
         Ok(Err(_)) => Err(UserError::BadUserRequest),
         Err(_) => Err(UserError::BadUserRequest),
     }

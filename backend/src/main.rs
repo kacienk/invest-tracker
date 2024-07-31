@@ -14,6 +14,7 @@ use clap::Parser;
 #[actix_web::main]
 async fn main() {
     let manager_command = InvestTrackerManagerArgs::parse();
+    env_logger::init();
 
     match manager_command.subcommand {
         ManagerSubcommand::InvestmentType(investment_type) => {
