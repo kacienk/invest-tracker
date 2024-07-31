@@ -4,7 +4,7 @@ use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 
-use crate::auth::auth_utils::validate_token;
+use crate::auth::utils::validate_token;
 use crate::db::AppState;
 
 pub async fn auth_validator(

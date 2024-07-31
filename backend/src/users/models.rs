@@ -19,7 +19,7 @@ pub struct NewInvestmentUser {
     pub email: String,
     pub password: String,
     pub salt: String,
-    pub created_at: DateTime<Utc>,
+    pub superuser: bool,
 }
 
 #[derive(Queryable, Selectable, AsChangeset, Serialize, Debug)]
@@ -29,6 +29,7 @@ pub struct InvestmentUser {
     pub email: String,
     pub password: String,
     pub salt: String,
+    pub superuser: bool,
     pub created_at: DateTime<Utc>,
 }
 

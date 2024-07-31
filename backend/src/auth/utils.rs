@@ -4,14 +4,9 @@ use jsonwebtoken::{
     Header, Validation,
 };
 use rand::Rng;
-use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    exp: usize,
-}
+use super::models::Claims;
 
 pub fn generate_salt() -> [u8; 16] {
     let mut rng = rand::thread_rng();

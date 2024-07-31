@@ -8,13 +8,16 @@ use base64::{engine::general_purpose, Engine};
 
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};
-use crate::users::{
-    errors::UserError,
-    messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
-    models::{CreateUserBody, InvestmentUserResponse, NewInvestmentUser},
+use crate::{
+    auth::common,
+    users::{
+        errors::UserError,
+        messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
+        models::{CreateUserBody, InvestmentUserResponse, NewInvestmentUser},
+    },
 };
 
-use crate::auth::auth_utils;
+use crate::auth::utils;
 use crate::db::{AppState, DBActor};
 
 #[post("/login")]
@@ -34,8 +37,8 @@ pub async fn login(
         Err(_) => return Err(AuthError::BadAuthRequest),
     };
 
-    if auth_utils::verify_password(&body.password, &user.salt, &user.password) {
-        let token = auth_utils::generate_token(secret, &user.id.to_string());
+    if utils::verify_password(&body.password, &user.salt, &user.password) {
+        let token = utils::generate_token(secret, &user.id.to_string());
         Ok(Json(TokenResponse { token }))
     } else {
         Err(AuthError::AuthError)
@@ -63,17 +66,7 @@ pub async fn register(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
 ) -> Result<Json<InvestmentUserResponse>, UserError> {
-    let new_salt = auth_utils::generate_salt();
-    let salt_str = general_purpose::STANDARD.encode(&new_salt);
-    let hashed_password = auth_utils::hash_password(&body.password, &new_salt);
-    let user = NewInvestmentUser {
-        username: body.username.clone(),
-        email: body.email.clone(),
-        password: hashed_password,
-        salt: salt_str,
-        created_at: chrono::Utc::now(),
-    };
-
+    let user = common::new_user(&body.username, &body.email, &body.password, false);
     let db: Addr<DBActor> = state.as_ref().db.clone();
     match db.send(CreateInvestmentUser { user }).await {
         Ok(Ok(user)) => Ok(Json(InvestmentUserResponse::from(user))),
