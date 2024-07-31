@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use crate::investments::args::InvestmentTypeCommand;
+use crate::{investment_types::cli_args::InvestmentTypeCommand, users::cli_args::UserCommand};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -17,5 +17,8 @@ pub struct InvestTrackerManagerArgs {
 pub enum ManagerSubcommand {
     #[clap(name = "investment-type", about = "Manage investment types")]
     InvestmentType(InvestmentTypeCommand),
+    #[clap(name = "user", about = "Manage users")]
+    User(UserCommand),
+    #[clap(name = "run-server", about = "Run server")]
     RunServer,
 }

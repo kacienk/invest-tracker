@@ -1,10 +1,27 @@
-use diesel::prelude::*;
-use dotenv::dotenv;
-use std::env;
+use actix::{Actor, Addr, SyncContext};
+use dashmap::DashSet;
+use diesel::{
+    prelude::*,
+    r2d2::{ConnectionManager, Pool},
+};
+use std::sync::Arc;
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
+pub struct DBActor(pub Pool<ConnectionManager<PgConnection>>);
 
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
+#[derive(Clone)]
+pub struct AppState {
+    pub db: Addr<DBActor>,
+    pub secret: Arc<String>,
+    pub invalid_tokens: Arc<DashSet<String>>,
+}
+
+impl Actor for DBActor {
+    type Context = SyncContext<Self>;
+}
+
+pub fn get_pool(db_url: &str) -> Pool<ConnectionManager<PgConnection>> {
+    let manager = ConnectionManager::<PgConnection>::new(db_url);
+    Pool::builder()
+        .build(manager)
+        .expect("Failed to create pool")
 }

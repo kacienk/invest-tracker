@@ -1,14 +1,4 @@
-use actix_web::{
-    error::ResponseError,
-    get,
-    http::{header::ContentType, StatusCode},
-    post, put,
-    web::Data,
-    web::Json,
-    web::Path,
-    HttpResponse,
-};
-use serde::{Deserialize, Serialize};
+use actix_web::{error::ResponseError, http::StatusCode, HttpResponse};
 use strum::Display;
 
 #[derive(Debug, Display)]
@@ -34,9 +24,4 @@ impl ResponseError for InvestmentsError {
             InvestmentsError::BadInvestmentRequest => StatusCode::BAD_REQUEST,
         }
     }
-}
-
-#[get("/investments")]
-pub async fn get_investments() -> Result<Json<String>, InvestmentsError> {
-    return Ok(Json("hello world!".to_string()));
 }

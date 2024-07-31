@@ -1,4 +1,5 @@
 use clap::{Args, Subcommand};
+use uuid::Uuid;
 
 #[derive(Debug, Args)]
 pub struct InvestmentTypeCommand {
@@ -23,7 +24,7 @@ pub struct CreateInvestmentType {
 #[derive(Debug, Args)]
 pub struct UpdateInvestmentType {
     #[clap(short, long)]
-    pub id: i32,
+    pub id: Uuid,
     #[clap(short, long)]
     pub name: String,
 }
@@ -31,5 +32,5 @@ pub struct UpdateInvestmentType {
 #[derive(Debug, Args)]
 pub struct DeleteInvestmentType {
     #[clap(short, long)]
-    pub id: i32,
+    pub id: Uuid,
 }
