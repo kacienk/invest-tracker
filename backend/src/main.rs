@@ -3,6 +3,7 @@ extern crate diesel;
 
 mod args;
 mod auth;
+mod common;
 mod db;
 mod investment_groups;
 mod investment_types;
