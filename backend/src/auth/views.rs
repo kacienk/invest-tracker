@@ -12,7 +12,7 @@ use crate::{
     users::{
         errors::UserError,
         messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
-        models::{CreateUserBody, InvestmentUserResponse, NewInvestmentUser},
+        models::{CreateUserBody, InvestmentUserResponse},
     },
 };
 
