@@ -1,6 +1,7 @@
 use crate::schema::investment_types;
 
 use diesel::prelude::*;
+use serde::Serialize;
 use uuid::Uuid;
 
 #[derive(Insertable)]
@@ -10,7 +11,7 @@ pub struct NewInvestmentType<'a> {
     pub name: &'a str,
 }
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Selectable, Serialize, Debug)]
 pub struct InvestmentType {
     pub id: Uuid,
     #[column_name = "type_name"]

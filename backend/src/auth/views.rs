@@ -46,7 +46,6 @@ pub async fn login(
 }
 
 #[get("/logout")]
-
 pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpResponse, AuthError> {
     let auth = match req.headers().get("Authorization") {
         Some(a) => a,
