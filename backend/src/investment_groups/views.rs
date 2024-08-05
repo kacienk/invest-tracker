@@ -5,13 +5,13 @@ use actix_web::{delete, get, patch, post, HttpResponse};
 use super::errors::InvestmentGroupError;
 use super::messages::{
     CreateInvestmentGroup, DeleteInvestmentGroup, GetAllInvestmentGroups, GetInvestmentGroup,
-    UpdateInvestmentGroup,
+    GetInvestmentsForGroup, UpdateInvestmentGroup,
 };
 
 use super::models::{InvestmentGroupUpdate, NewInvestmentGroup, UpdateInvestmentGroupRequestBody};
 use crate::db::{AppState, DBActor};
 
-#[get("/investment_groups")]
+#[get("/investment-groups")]
 pub async fn get_all_investment_groups(
     state: Data<AppState>,
 ) -> Result<HttpResponse, InvestmentGroupError> {
@@ -23,7 +23,7 @@ pub async fn get_all_investment_groups(
     }
 }
 
-#[get("/investment_groups/{id}")]
+#[get("/investment-groups/{id}")]
 pub async fn get_investment_group(
     state: Data<AppState>,
     id: Path<String>,
@@ -39,7 +39,7 @@ pub async fn get_investment_group(
     }
 }
 
-#[post("/investment_groups")]
+#[post("/investment-groups")]
 pub async fn create_investment_group(
     state: Data<AppState>,
     body: Json<NewInvestmentGroup>,
@@ -55,7 +55,7 @@ pub async fn create_investment_group(
     }
 }
 
-#[patch("/investments/{id}")]
+#[patch("/investment-groups/{id}")]
 pub async fn update_investment_group(
     state: Data<AppState>,
     id: Path<String>,
@@ -74,7 +74,7 @@ pub async fn update_investment_group(
     }
 }
 
-#[delete("/investment_groups/{id}")]
+#[delete("/investment-groups/{id}")]
 pub async fn delete_investment_group(
     state: Data<AppState>,
     id: Path<String>,
@@ -88,5 +88,21 @@ pub async fn delete_investment_group(
         Ok(Ok(_)) => Ok(HttpResponse::NoContent().finish()),
         Ok(Err(_)) => Err(InvestmentGroupError::InvestmentGroupNotFound),
         Err(_) => Err(InvestmentGroupError::InvestmentGroupDeleteError),
+    }
+}
+
+#[get("/investment-groups/{id}/investments")]
+pub async fn get_investments_for_group(
+    state: Data<AppState>,
+    id: Path<String>,
+) -> Result<HttpResponse, InvestmentGroupError> {
+    let db: Addr<DBActor> = state.as_ref().db.clone();
+
+    let message = GetInvestmentsForGroup {
+        investment_group_id: id.into_inner(),
+    };
+    match db.send(message).await {
+        Ok(Ok(investments)) => Ok(HttpResponse::Ok().json(investments)),
+        _ => Err(InvestmentGroupError::InvestmentGroupNotFound),
     }
 }
