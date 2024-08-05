@@ -4,7 +4,6 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest, HttpResponse,
 };
-use base64::{engine::general_purpose, Engine};
 
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};
@@ -13,7 +12,7 @@ use crate::{
     users::{
         errors::UserError,
         messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
-        models::{CreateUserBody, InvestmentUserResponse, NewInvestmentUser},
+        models::{CreateUserBody, InvestmentUserResponse},
     },
 };
 
@@ -24,7 +23,7 @@ use crate::db::{AppState, DBActor};
 pub async fn login(
     state: Data<AppState>,
     body: Json<LoginBody>,
-) -> Result<Json<TokenResponse>, AuthError> {
+) -> Result<HttpResponse, AuthError> {
     let db: Addr<DBActor> = state.as_ref().db.clone();
     let secret: &str = state.as_ref().secret.as_ref();
 
@@ -39,7 +38,8 @@ pub async fn login(
 
     if utils::verify_password(&body.password, &user.salt, &user.password) {
         let token = utils::generate_token(secret, &user.id.to_string());
-        Ok(Json(TokenResponse { token }))
+        let data = Json(TokenResponse { token });
+        Ok(HttpResponse::Ok().json(data))
     } else {
         Err(AuthError::AuthError)
     }
@@ -65,11 +65,11 @@ pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpRespo
 pub async fn register(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
-) -> Result<Json<InvestmentUserResponse>, UserError> {
+) -> Result<HttpResponse, UserError> {
     let user = common::new_user(&body.username, &body.email, &body.password, false);
     let db: Addr<DBActor> = state.as_ref().db.clone();
     match db.send(CreateInvestmentUser { user }).await {
-        Ok(Ok(user)) => Ok(Json(InvestmentUserResponse::from(user))),
+        Ok(Ok(user)) => Ok(HttpResponse::Created().json(InvestmentUserResponse::from(user))),
         Ok(Err(_)) => Err(UserError::UserCreateError),
         Err(_) => Err(UserError::UserCreateError),
     }

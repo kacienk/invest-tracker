@@ -22,7 +22,7 @@ pub struct NewInvestmentUser {
     pub superuser: bool,
 }
 
-#[derive(Queryable, Selectable, AsChangeset, Serialize, Debug)]
+#[derive(Queryable, Selectable, AsChangeset, Identifiable, Serialize, Debug)]
 pub struct InvestmentUser {
     pub id: Uuid,
     pub username: String,

@@ -9,6 +9,8 @@ use dotenv::dotenv;
 use crate::auth::middleware::auth_validator;
 use crate::auth::routes::auth_routes;
 use crate::db::{get_pool, AppState, DBActor};
+use crate::investment_groups::routes::investment_groups_routes;
+use crate::investment_types::routes::investment_types_routes;
 use crate::investments::routes::investments_routes;
 use crate::users::routes::user_routes;
 
@@ -41,7 +43,9 @@ pub async fn run_server() -> std::io::Result<()> {
                         web::scope("")
                             .wrap(auth)
                             .configure(user_routes)
-                            .configure(investments_routes),
+                            .configure(investments_routes)
+                            .configure(investment_types_routes)
+                            .configure(investment_groups_routes),
                     ),
             )
     })

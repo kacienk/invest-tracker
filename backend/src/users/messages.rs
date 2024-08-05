@@ -4,7 +4,10 @@ use diesel::prelude::*;
 use diesel::QueryResult;
 use uuid::Uuid;
 
+use crate::common::utils::parse_uuid;
 use crate::db::DBActor;
+use crate::investment_groups::models::InvestmentGroup;
+use crate::investments::models::Investment;
 use crate::schema::investment_users::dsl::*;
 use crate::users::models::{InvestmentUser, NewInvestmentUser};
 
@@ -43,6 +46,18 @@ pub struct DeleteInvestmentUser {
     pub user_id: String,
 }
 
+#[derive(Message)]
+#[rtype(result = "QueryResult<Vec<Investment>>")]
+pub struct GetInvestmentsForUser {
+    pub user_id: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<Vec<InvestmentGroup>>")]
+pub struct GetInvestmentGroupsForUser {
+    pub user_id: String,
+}
+
 impl Handler<CreateInvestmentUser> for DBActor {
     type Result = QueryResult<InvestmentUser>;
 
@@ -75,11 +90,7 @@ impl Handler<GetInvestmentUser> for DBActor {
     fn handle(&mut self, msg: GetInvestmentUser, _ctx: &mut Self::Context) -> Self::Result {
         let mut conn = self.0.get().expect("Failed to get DB connection");
 
-        let user_id: Uuid = match Uuid::parse_str(&msg.user_id) {
-            Ok(id_) => id_,
-            Err(_) => return Err(diesel::result::Error::NotFound),
-        };
-
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
         investment_users
             .select(InvestmentUser::as_select())
             .find(user_id)
@@ -106,11 +117,7 @@ impl Handler<DeleteInvestmentUser> for DBActor {
     fn handle(&mut self, msg: DeleteInvestmentUser, _ctx: &mut Self::Context) -> Self::Result {
         let mut conn = self.0.get().expect("Failed to get DB connection");
 
-        let user_id: Uuid = match Uuid::parse_str(&msg.user_id) {
-            Ok(id_) => id_,
-            Err(_) => return Err(diesel::result::Error::NotFound),
-        };
-
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
         diesel::delete(investment_users.find(user_id)).execute(&mut conn)?;
 
         Ok(())
@@ -123,14 +130,44 @@ impl Handler<UpdateInvestmentUser> for DBActor {
     fn handle(&mut self, msg: UpdateInvestmentUser, _ctx: &mut Self::Context) -> Self::Result {
         let mut conn = self.0.get().expect("Failed to get DB connection");
 
-        let user_id: Uuid = match Uuid::parse_str(&msg.user_id) {
-            Ok(id_) => id_,
-            Err(_) => return Err(diesel::result::Error::NotFound),
-        };
-
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
         diesel::update(investment_users.find(user_id))
             .set(username.eq(&msg.username))
             .returning(InvestmentUser::as_select())
             .get_result(&mut conn)
+    }
+}
+
+impl Handler<GetInvestmentsForUser> for DBActor {
+    type Result = QueryResult<Vec<Investment>>;
+
+    fn handle(&mut self, msg: GetInvestmentsForUser, _ctx: &mut Self::Context) -> Self::Result {
+        let mut conn = self.0.get().expect("Failed to get DB connection");
+
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
+        let user: InvestmentUser = investment_users
+            .find(user_id)
+            .select(InvestmentUser::as_select())
+            .get_result(&mut conn)?;
+        Investment::belonging_to(&user).load::<Investment>(&mut conn)
+    }
+}
+
+impl Handler<GetInvestmentGroupsForUser> for DBActor {
+    type Result = QueryResult<Vec<InvestmentGroup>>;
+
+    fn handle(
+        &mut self,
+        msg: GetInvestmentGroupsForUser,
+        _ctx: &mut Self::Context,
+    ) -> Self::Result {
+        let mut conn = self.0.get().expect("Failed to get DB connection");
+
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
+        let user: InvestmentUser = investment_users
+            .find(user_id)
+            .select(InvestmentUser::as_select())
+            .get_result(&mut conn)?;
+        InvestmentGroup::belonging_to(&user).load::<InvestmentGroup>(&mut conn)
     }
 }
