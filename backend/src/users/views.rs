@@ -6,8 +6,9 @@ use super::errors::UserError;
 use super::messages::{GetAllInvestmentUsers, GetInvestmentUser};
 use super::models::InvestmentUserResponse;
 use crate::db::{AppState, DBActor};
+use crate::investment_groups::models::InvestmentGroup;
 use crate::investments::models::Investment;
-use crate::users::messages::GetInvestmentsForUser;
+use crate::users::messages::{GetInvestmentGroupsForUser, GetInvestmentsForUser};
 
 #[get("/users/{user_id}")]
 pub async fn get_user(
@@ -63,13 +64,13 @@ pub async fn get_investments_for_user(
 pub async fn get_users_investment_groups(
     state: Data<AppState>,
     user_id: Path<String>,
-) -> Result<Json<InvestmentUserResponse>, UserError> {
+) -> Result<Json<Vec<InvestmentGroup>>, UserError> {
     let db: Addr<DBActor> = state.as_ref().db.clone();
-    let message = GetInvestmentUser {
+    let message = GetInvestmentGroupsForUser {
         user_id: user_id.to_string(),
     };
     match db.send(message).await {
-        Ok(Ok(user)) => Ok(Json(InvestmentUserResponse::from(user))),
+        Ok(Ok(investment_groups)) => Ok(Json(investment_groups)),
         Ok(Err(_)) => Err(UserError::UserNotFound),
         Err(_) => Err(UserError::BadUserRequest),
     }

@@ -1,4 +1,4 @@
-use crate::schema::investment_groups;
+use crate::{schema::investment_groups, users::models::InvestmentUser};
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
@@ -13,7 +13,8 @@ pub struct NewInvestmentGroup {
     pub owner_id: Uuid,
 }
 
-#[derive(Identifiable, Queryable, Selectable, Debug, Serialize)]
+#[derive(Identifiable, Queryable, Associations, Selectable, Debug, Serialize)]
+#[diesel(belongs_to(InvestmentUser, foreign_key = owner_id))]
 pub struct InvestmentGroup {
     pub id: Uuid,
     #[column_name = "group_name"]

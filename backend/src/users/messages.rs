@@ -6,6 +6,7 @@ use uuid::Uuid;
 
 use crate::common::utils::parse_uuid;
 use crate::db::DBActor;
+use crate::investment_groups::models::InvestmentGroup;
 use crate::investments::models::Investment;
 use crate::schema::investment_users::dsl::*;
 use crate::users::models::{InvestmentUser, NewInvestmentUser};
@@ -48,6 +49,12 @@ pub struct DeleteInvestmentUser {
 #[derive(Message)]
 #[rtype(result = "QueryResult<Vec<Investment>>")]
 pub struct GetInvestmentsForUser {
+    pub user_id: String,
+}
+
+#[derive(Message)]
+#[rtype(result = "QueryResult<Vec<InvestmentGroup>>")]
+pub struct GetInvestmentGroupsForUser {
     pub user_id: String,
 }
 
@@ -143,5 +150,24 @@ impl Handler<GetInvestmentsForUser> for DBActor {
             .select(InvestmentUser::as_select())
             .get_result(&mut conn)?;
         Investment::belonging_to(&user).load::<Investment>(&mut conn)
+    }
+}
+
+impl Handler<GetInvestmentGroupsForUser> for DBActor {
+    type Result = QueryResult<Vec<InvestmentGroup>>;
+
+    fn handle(
+        &mut self,
+        msg: GetInvestmentGroupsForUser,
+        _ctx: &mut Self::Context,
+    ) -> Self::Result {
+        let mut conn = self.0.get().expect("Failed to get DB connection");
+
+        let user_id: Uuid = parse_uuid(&msg.user_id)?;
+        let user: InvestmentUser = investment_users
+            .find(user_id)
+            .select(InvestmentUser::as_select())
+            .get_result(&mut conn)?;
+        InvestmentGroup::belonging_to(&user).load::<InvestmentGroup>(&mut conn)
     }
 }
