@@ -2,17 +2,18 @@ use crate::schema::investment_groups;
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-#[derive(Insertable)]
+#[derive(Insertable, Deserialize, Debug)]
 #[table_name = "investment_groups"]
-pub struct NewInvestmentGroup<'a> {
+pub struct NewInvestmentGroup {
     #[column_name = "group_name"]
-    pub name: &'a str,
+    pub name: String,
     pub owner_id: Uuid,
 }
 
-#[derive(Queryable, AsChangeset, Debug)]
+#[derive(Queryable, Selectable, Debug, Serialize)]
 pub struct InvestmentGroup {
     pub id: Uuid,
     #[column_name = "group_name"]
@@ -21,4 +22,29 @@ pub struct InvestmentGroup {
     pub updated_at: DateTime<Utc>,
     pub deleted: bool,
     pub owner_id: Uuid,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct UpdateInvestmentGroupRequestBody {
+    pub name: Option<String>,
+    pub deleted: Option<bool>,
+}
+
+#[derive(AsChangeset)]
+#[table_name = "investment_groups"]
+pub struct InvestmentGroupUpdate {
+    #[column_name = "group_name"]
+    pub name: Option<String>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted: Option<bool>,
+}
+
+impl From<UpdateInvestmentGroupRequestBody> for InvestmentGroupUpdate {
+    fn from(body: UpdateInvestmentGroupRequestBody) -> Self {
+        InvestmentGroupUpdate {
+            name: body.name,
+            updated_at: Utc::now(),
+            deleted: body.deleted,
+        }
+    }
 }
