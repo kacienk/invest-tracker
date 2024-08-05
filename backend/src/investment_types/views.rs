@@ -7,7 +7,7 @@ use super::messages::GetAllInvestmentTypes;
 
 use crate::db::{AppState, DBActor};
 
-#[get("/investments")]
+#[get("/investment-types")]
 pub async fn get_all_investment_types(
     state: Data<AppState>,
 ) -> Result<HttpResponse, InvestmentTypesError> {
