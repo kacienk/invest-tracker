@@ -13,7 +13,7 @@ pub struct NewInvestmentGroup {
     pub owner_id: Uuid,
 }
 
-#[derive(Queryable, Selectable, Debug, Serialize)]
+#[derive(Identifiable, Queryable, Selectable, Debug, Serialize)]
 pub struct InvestmentGroup {
     pub id: Uuid,
     #[column_name = "group_name"]

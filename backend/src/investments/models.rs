@@ -1,4 +1,6 @@
-use crate::schema::investments;
+use crate::{
+    investment_groups::models::InvestmentGroup, schema::investments, users::models::InvestmentUser,
+};
 
 use bigdecimal::BigDecimal;
 use chrono::{DateTime, Utc};
@@ -34,8 +36,10 @@ pub struct InvestmentUpdate {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Selectable, Queryable, Serialize, Debug)]
+#[derive(Identifiable, Associations, Selectable, Queryable, Serialize, Debug)]
 #[diesel(check_for_backend(Pg))]
+#[diesel(belongs_to(InvestmentUser, foreign_key = creator_id))]
+#[diesel(belongs_to(InvestmentGroup, foreign_key = group_id))]
 pub struct Investment {
     pub id: Uuid,
     #[column_name = "investment_name"]
@@ -43,12 +47,14 @@ pub struct Investment {
     pub code: Option<String>,
     pub initial_value: BigDecimal,
     pub current_value: BigDecimal,
-    pub investment_datetime: DateTime<Utc>,
+    pub investment_datetime: chrono::DateTime<Utc>,
+    pub created_at: chrono::DateTime<Utc>,
+    pub updated_at: chrono::DateTime<Utc>,
+    pub closed: bool,
+    pub deleted: bool,
     pub group_id: Uuid,
     pub creator_id: Uuid,
     pub investment_type_id: Option<Uuid>,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Deserialize)]
