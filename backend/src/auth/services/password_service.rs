@@ -1,49 +1,20 @@
 use base64::{engine::general_purpose, Engine};
-use jsonwebtoken::{
-    decode, encode, errors::ErrorKind::ExpiredSignature, Algorithm, DecodingKey, EncodingKey,
-    Header, Validation,
-};
 use rand::Rng;
 use sha2::{Digest, Sha256};
 
-struct HashedPassword {
-    hash: String,
-    salt: String,
+pub struct HashedPassword {
+    pub hash: String,
+    pub salt: String,
 }
 
-enum PasswordServiceState {
-    Hashed,
-    Unhashed,
-}
-
-pub struct PasswordService {
-    password: Option<String>,
-    hash: Option<String>,
-    salt: [u8; 16],
-    state: PasswordServiceState,
-}
+pub struct PasswordService {}
 
 impl PasswordService {
-    pub fn from_hashed(hash_base64: &str, salt_base64: &str) -> PasswordService {
-        let stored_salt = general_purpose::STANDARD
-            .decode(salt_base64)
-            .expect("Failed to decode salt");
-
-        PasswordService {
-            password: None,
-            hash: Some(hash_base64.to_string()),
-            salt: stored_salt,
-            state: PasswordServiceState::Hashed,
-        }
-    }
-
-    pub fn from_unhashed(password: &str) -> PasswordService {
-        PasswordService {
-            password: Some(password.to_string()),
-            hash: None,
-            salt: generate_salt(),
-            state: PasswordServiceState::Unhashed,
-        }
+    pub fn hash_password(password: &str) -> HashedPassword {
+        let byte_salt: [u8; 16] = Self::generate_salt();
+        let salt: String = general_purpose::STANDARD.encode(&byte_salt);
+        let hash = Self::do_hash_password(password, &byte_salt);
+        HashedPassword { hash, salt }
     }
 
     fn generate_salt() -> [u8; 16] {
@@ -53,25 +24,7 @@ impl PasswordService {
         salt
     }
 
-    pub fn get_hashed_password(&mut self) -> HashedPassword {
-        match self.state {
-            PasswordServiceState::Hashed => HashedPassword {
-                hash: self.hash.clone().unwrap(),
-                salt: general_purpose::STANDARD.encode(&self.salt),
-            },
-            PasswordServiceState::Unhashed => {
-                let hash = hash_password(self.password.clone().unwrap(), &self.salt);
-                self.hash = Some(hash.clone());
-                self.state = PasswordServiceState::Hashed;
-                HashedPassword {
-                    hash,
-                    salt: general_purpose::STANDARD.encode(&self.salt),
-                }
-            }
-        }
-    }
-
-    fn hash_password(password: &str, salt: &[u8; 16]) -> String {
+    fn do_hash_password(password: &str, salt: &[u8; 16]) -> String {
         let mut hasher = Sha256::new();
         hasher.update(password.as_bytes());
         hasher.update(salt);
@@ -85,7 +38,12 @@ impl PasswordService {
         stored_salt_base64: &str,
         stored_hash_base64: &str,
     ) -> bool {
-        let hash_to_verify = hash_password(provided_password, &stored_salt);
+        let stored_salt: [u8; 16] = general_purpose::STANDARD
+            .decode(stored_salt_base64)
+            .expect("Failed to decode salt")
+            .try_into()
+            .expect("Malformed salt");
+        let hash_to_verify = Self::do_hash_password(provided_password, &stored_salt);
 
         hash_to_verify == stored_hash_base64
     }

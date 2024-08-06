@@ -5,15 +5,14 @@ use actix_web::{
     HttpRequest, HttpResponse,
 };
 
+use super::common;
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};
-use crate::{
-    auth::common,
-    users::{
-        errors::UserError,
-        messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
-        models::{CreateUserBody, InvestmentUserResponse},
-    },
+use super::services::password_service::PasswordService;
+use crate::users::{
+    errors::UserError,
+    messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
+    models::{CreateUserBody, InvestmentUserResponse},
 };
 
 use crate::auth::utils;
@@ -36,7 +35,7 @@ pub async fn login(
         Err(_) => return Err(AuthError::BadAuthRequest),
     };
 
-    if utils::verify_password(&body.password, &user.salt, &user.password) {
+    if PasswordService::verify_password(&body.password, &user.salt, &user.password) {
         let token = utils::generate_token(secret, &user.id.to_string());
         let data = Json(TokenResponse { token });
         Ok(HttpResponse::Ok().json(data))

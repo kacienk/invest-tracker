@@ -3,7 +3,11 @@ use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 
 use crate::users::models::NewInvestmentUser;
 
-use super::{models::Claims, utils};
+use super::{
+    models::Claims,
+    services::password_service::{HashedPassword, PasswordService},
+    utils,
+};
 
 pub fn get_username_from_token(
     secret: &str,
@@ -27,15 +31,13 @@ pub fn new_user(
     passwd: &String,
     superuser: bool,
 ) -> NewInvestmentUser {
-    let new_salt = utils::generate_salt();
-    let salt_str = general_purpose::STANDARD.encode(&new_salt);
-    let hashed_password = utils::hash_password(passwd, &new_salt);
+    let HashedPassword { hash, salt } = PasswordService::hash_password(passwd);
 
     NewInvestmentUser {
         username: username.clone(),
         email: email.clone(),
-        password: hashed_password,
-        salt: salt_str,
+        password: hash,
+        salt,
         superuser: superuser.clone(),
     }
 }
