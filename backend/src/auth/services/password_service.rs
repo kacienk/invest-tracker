@@ -7,7 +7,7 @@ pub struct HashedPassword {
     pub salt: String,
 }
 
-pub struct PasswordService {}
+pub struct PasswordService;
 
 impl PasswordService {
     pub fn hash_password(password: &str) -> HashedPassword {

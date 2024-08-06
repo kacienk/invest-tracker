@@ -4,19 +4,18 @@ use actix_web::{
     web::{Data, Json},
     HttpRequest, HttpResponse,
 };
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 
 use super::common;
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};
-use super::services::password_service::PasswordService;
+use super::services::{jwt_service::JwtService, password_service::PasswordService};
+use crate::db::{AppState, DBActor};
 use crate::users::{
     errors::UserError,
     messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
     models::{CreateUserBody, InvestmentUserResponse},
 };
-
-use crate::auth::utils;
-use crate::db::{AppState, DBActor};
 
 #[post("/login")]
 pub async fn login(
@@ -36,28 +35,19 @@ pub async fn login(
     };
 
     if PasswordService::verify_password(&body.password, &user.salt, &user.password) {
-        let token = utils::generate_token(secret, &user.id.to_string());
-        let data = Json(TokenResponse { token });
-        Ok(HttpResponse::Ok().json(data))
+        let token_service = JwtService::new(secret);
+        let token: String = token_service.generate_token(&user.id.to_string());
+        Ok(HttpResponse::Ok().json(TokenResponse { token }))
     } else {
         Err(AuthError::AuthError)
     }
 }
 
 #[get("/logout")]
-pub async fn logout(req: HttpRequest, state: Data<AppState>) -> Result<HttpResponse, AuthError> {
-    let auth = match req.headers().get("Authorization") {
-        Some(a) => a,
-        None => return Err(AuthError::AuthError),
-    };
-    let auth_str = auth.to_str().unwrap();
-    if auth_str.starts_with("Bearer ") {
-        let token = &auth_str[7..];
-        state.invalid_tokens.insert(token.to_string());
-        Ok(HttpResponse::Ok().finish())
-    } else {
-        Err(AuthError::BadAuthRequest)
-    }
+pub async fn logout(state: Data<AppState>, credentials: BearerAuth) -> HttpResponse {
+    let token = credentials.token();
+    state.invalid_tokens.insert(token.to_string());
+    HttpResponse::Ok().finish()
 }
 
 #[post("/register")]
