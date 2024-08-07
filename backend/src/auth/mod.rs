@@ -1,7 +1,6 @@
-pub mod common;
 mod errors;
 pub mod middleware;
 pub mod models;
 pub mod routes;
-mod services;
+pub mod services;
 mod views;

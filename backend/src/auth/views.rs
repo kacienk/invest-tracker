@@ -2,19 +2,21 @@ use actix::Addr;
 use actix_web::{
     get, post,
     web::{Data, Json},
-    HttpRequest, HttpResponse,
+    HttpResponse,
 };
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 
-use super::common;
 use super::errors::AuthError;
 use super::models::{LoginBody, TokenResponse};
 use super::services::{jwt_service::JwtService, password_service::PasswordService};
-use crate::db::{AppState, DBActor};
 use crate::users::{
     errors::UserError,
     messages::{CreateInvestmentUser, GetInvestmentUserByEmail},
     models::{CreateUserBody, InvestmentUserResponse},
+};
+use crate::{
+    db::{AppState, DBActor},
+    users::models::NewInvestmentUser,
 };
 
 #[post("/login")]
@@ -55,7 +57,7 @@ pub async fn register(
     state: Data<AppState>,
     body: Json<CreateUserBody>,
 ) -> Result<HttpResponse, UserError> {
-    let user = common::new_user(&body.username, &body.email, &body.password, false);
+    let user = NewInvestmentUser::new(&body.username, &body.email, &body.password, false);
     let db: Addr<DBActor> = state.as_ref().db.clone();
     match db.send(CreateInvestmentUser { user }).await {
         Ok(Ok(user)) => Ok(HttpResponse::Created().json(InvestmentUserResponse::from(user))),
