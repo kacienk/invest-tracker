@@ -1,4 +1,7 @@
-use crate::schema::investment_users;
+use crate::{
+    auth::services::password_service::{HashedPassword, PasswordService},
+    schema::investment_users,
+};
 
 use chrono::{DateTime, Utc};
 use diesel::prelude::*;
@@ -39,6 +42,20 @@ pub struct InvestmentUserResponse {
     pub username: String,
     pub email: String,
     pub created_at: DateTime<Utc>,
+}
+
+impl NewInvestmentUser {
+    pub fn new(username: &str, email: &str, passwd: &str, superuser: bool) -> NewInvestmentUser {
+        let HashedPassword { hash, salt } = PasswordService::hash_password(passwd);
+
+        NewInvestmentUser {
+            username: username.to_owned(),
+            email: email.to_owned(),
+            password: hash,
+            salt,
+            superuser,
+        }
+    }
 }
 
 impl From<InvestmentUser> for InvestmentUserResponse {

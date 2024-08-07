@@ -1,11 +1,11 @@
+use crate::db::AppState;
 use actix_web::dev::ServiceRequest;
 use actix_web::web::Data;
 use actix_web::Error;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 
-use crate::auth::utils::validate_token;
-use crate::db::AppState;
+use super::services::jwt_service::JwtService;
 
 pub async fn auth_validator(
     req: ServiceRequest,
@@ -25,7 +25,8 @@ pub async fn auth_validator(
         return Err((error, req));
     }
 
-    match validate_token(secret, token) {
+    let token_service = JwtService::new(secret);
+    match token_service.validate_token(token) {
         Ok(res) => {
             if res {
                 Ok(req)

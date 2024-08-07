@@ -1,7 +1,7 @@
 use super::cli_args::{CreateUser, DeleteUser, UpdateUser, UserCommand, UserSubcommand};
 use super::models::InvestmentUser;
-use crate::auth::common::new_user;
 use crate::db::get_pool;
+use crate::users::models::NewInvestmentUser;
 use diesel::prelude::*;
 
 pub fn handle_user_command(investment_type: UserCommand) {
@@ -24,7 +24,8 @@ pub fn create_investment_type(user: CreateUser) {
     let pool = get_pool(&db_url);
     let mut conn = pool.get().expect("Failed to get a database connection");
 
-    let new_user = new_user(&user.username, &user.email, &user.password, user.superuser);
+    let new_user =
+        NewInvestmentUser::new(&user.username, &user.email, &user.password, user.superuser);
 
     diesel::insert_into(investment_users)
         .values(&new_user)
